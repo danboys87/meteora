@@ -1,6 +1,7 @@
 import "dotenv/config";
 import fs from "fs";
 import { fetchCandidates } from "./screener.js";
+import { startServer } from "./server.js";
 
 const cfg = JSON.parse(fs.readFileSync(new URL("./config.json", import.meta.url), "utf8"));
 const DRY = process.env.DRY_RUN !== "false";
@@ -11,11 +12,20 @@ const log = (...a) => console.log(new Date().toISOString(), ...a);
 const load = () =>
   fs.existsSync(STATE_FILE)
     ? JSON.parse(fs.readFileSync(STATE_FILE, "utf8"))
-    : { open: {}, cooldown: {} };
+    : { open: {}, cooldown: {}, closed: [] };
 const save = (s) => fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
+
+// Data yang ditampilkan di dashboard (tidak berisi kunci rahasia)
+const status = {
+  mode: DRY ? "DRY" : "LIVE", startedAt: Date.now(),
+  lastManage: null, lastScreen: null, balance: null,
+  positions: [], candidates: [], events: [], cfg,
+};
 
 async function notify(text) {
   log(text);
+  status.events.unshift({ t: Date.now(), text: String(text) });
+  status.events.length = Math.min(status.events.length, 50);
   const { TELEGRAM_BOT_TOKEN: t, TELEGRAM_CHAT_ID: c } = process.env;
   if (!t || !c) return;
   try {
@@ -30,9 +40,14 @@ async function notify(text) {
 // Chain hanya di-load kalau diperlukan (mode `screen` tidak butuh wallet).
 let _chain;
 const chain = async () => (_chain ??= await import("./dlmm.js"));
+async function refreshBalance() {
+  try { status.balance = await (await chain()).solBalance(); } catch (e) { log("saldo error:", e.message); }
+}
 
 // ── screening ────────────────────────────────────────
 async function screenCycle() {
+  status.lastScreen = Date.now();
+  await refreshBalance();
   const s = load();
   const open = Object.keys(s.open).length;
   if (open >= cfg.maxPositions) return log(`screen: posisi penuh (${open}/${cfg.maxPositions})`);
@@ -47,7 +62,9 @@ async function screenCycle() {
   const now = Date.now();
   const openPools = new Set(Object.values(s.open).map((p) => p.pool));
   const openMints = new Set(Object.values(s.open).map((p) => p.baseMint));
-  const cands = (await fetchCandidates(cfg)).filter(
+  const all = await fetchCandidates(cfg);
+  status.candidates = all.slice(0, 10);
+  const cands = all.filter(
     (x) => !openPools.has(x.pool) && !openMints.has(x.baseMint) &&
            !(s.cooldown[x.pool] > now)
   );
@@ -68,10 +85,13 @@ async function screenCycle() {
 
 // ── management ───────────────────────────────────────
 async function manageCycle() {
+  status.lastManage = Date.now();
+  await refreshBalance();
   const s = load();
   const entries = Object.entries(s.open);
-  if (!entries.length) return;
+  if (!entries.length) { status.positions = []; return; }
   const c = await chain();
+  const live = [];
   const m = cfg.manage;
 
   for (const [addr, meta] of entries) {
@@ -86,6 +106,9 @@ async function manageCycle() {
     const oorMin = meta.oorSince ? (Date.now() - meta.oorSince) / 60000 : 0;
     log(`manage: ${meta.name} pnl ${pnlPct.toFixed(2)}% | ${p.inRange ? "IN" : `OOR ${oorMin.toFixed(0)}m`}`);
 
+    live.push({ address: addr, name: meta.name, entrySol: meta.entrySol, valueSol: p.valueSol,
+                pnlPct, inRange: p.inRange, oorMin, openedAt: meta.openedAt });
+
     let reason = null;
     if (pnlPct <= m.stopLossPct) reason = `stop loss (${pnlPct.toFixed(2)}%)`;
     else if (pnlPct >= m.takeProfitPct) reason = `take profit (${pnlPct.toFixed(2)}%)`;
@@ -97,12 +120,15 @@ async function manageCycle() {
       await c.close(meta.pool, addr, p.lowerBin, p.upperBin);
       s.cooldown[meta.pool] = Date.now() + cfg.cooldownHours * 3600_000;
       delete s.open[addr];
+      (s.closed ??= []).unshift({ name: meta.name, pnlPct, reason, closedAt: Date.now(), entrySol: meta.entrySol });
+      s.closed.length = Math.min(s.closed.length, 50);
       await notify(`🔒 Close ${meta.name}: ${reason}\nCatatan: token sisa (jika ada) tetap di wallet, swap manual.`);
     } catch (e) {
       await notify(`❌ Gagal close ${meta.name}: ${e.message}`);
     }
   }
   save(s);
+  status.positions = live.filter((x) => s.open[x.address]);
 }
 
 // ── runner ───────────────────────────────────────────
@@ -123,6 +149,7 @@ if (cmd === "screen") {
   console.log(JSON.stringify(load().open, null, 2));
 } else {
   log(`Meridian Lite start | ${DRY ? "DRY RUN" : "LIVE"}`);
+  startServer(() => ({ ...status, closed: load().closed ?? [] }), log);
   const screen = safe("screen", screenCycle);
   const manage = safe("manage", manageCycle);
   await manage(); await screen();

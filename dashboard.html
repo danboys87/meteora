@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Meridian Lite</title>
+<style>
+  :root {
+    --bg:#f4f5f7; --card:#ffffff; --text:#14181f; --muted:#6b7380; --line:#e4e7ec;
+    --green:#0f9d58; --red:#d93025; --amber:#b26a00; --accent:#4f46e5;
+    --green-bg:#e6f6ee; --red-bg:#fdeceb; --amber-bg:#fff3e0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0e1116; --card:#171b22; --text:#e8ebf0; --muted:#8b94a3; --line:#262c36;
+      --green:#3ddc84; --red:#ff6b61; --amber:#ffb74d; --accent:#8b85ff;
+      --green-bg:#12301f; --red-bg:#3a1a18; --amber-bg:#3a2a10;
+    }
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0; background:var(--bg); color:var(--text);
+    font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+  }
+  main { max-width:760px; margin:0 auto; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  h1 { font-size:19px; margin:0; letter-spacing:-.2px; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:22px 2px 8px; font-weight:600; }
+  .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:99px; }
+  .b-dry { background:var(--amber-bg); color:var(--amber); }
+  .b-live { background:var(--green-bg); color:var(--green); }
+  .b-in { background:var(--green-bg); color:var(--green); }
+  .b-oor { background:var(--red-bg); color:var(--red); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); display:inline-block; }
+  .dot.ok { background:var(--green); } .dot.err { background:var(--red); }
+  .muted { color:var(--muted); font-size:13px; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  @media (min-width:600px) { .grid { grid-template-columns:repeat(4,1fr); } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:13px 14px; }
+  .stat .k { font-size:12px; color:var(--muted); }
+  .stat .v { font-size:21px; font-weight:650; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .pos { color:var(--green); } .neg { color:var(--red); }
+  .stack { display:flex; flex-direction:column; gap:10px; }
+  .between { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .name { font-weight:600; word-break:break-word; }
+  .big { font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .track { position:relative; height:6px; border-radius:6px; margin:14px 0 6px;
+           background:linear-gradient(90deg,var(--red-bg),var(--line) 50%,var(--green-bg)); }
+  .mark { position:absolute; top:-4px; width:14px; height:14px; border-radius:50%; background:var(--accent);
+          border:2px solid var(--card); transform:translateX(-50%); transition:left .4s; }
+  .scale { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+  .empty { text-align:center; color:var(--muted); padding:18px 10px; }
+  .log { font-size:13px; padding:8px 0; border-top:1px solid var(--line); white-space:pre-wrap; word-break:break-word; }
+  .log:first-child { border-top:0; }
+  .log time { color:var(--muted); margin-right:6px; font-variant-numeric:tabular-nums; }
+  .cfg { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; font-size:13px; }
+  .cfg span:nth-child(odd) { color:var(--muted); }
+  .cfg span:nth-child(even) { text-align:right; font-variant-numeric:tabular-nums; }
+  #banner { display:none; background:var(--red-bg); color:var(--red); padding:10px 12px; border-radius:10px; margin-bottom:12px; font-size:14px; }
+  button { font:inherit; background:var(--card); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:6px 12px; cursor:pointer; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="row"><h1>Meridian Lite</h1><span id="mode" class="badge"></span></div>
+    <div class="row"><span id="dot" class="dot"></span><span id="upd" class="muted">memuat…</span><button id="ref" type="button">↻</button></div>
+  </header>
+  <div id="banner"></div>
+
+  <div class="grid">
+    <div class="card stat"><div class="k">Saldo wallet</div><div class="v" id="s-bal">–</div></div>
+    <div class="card stat"><div class="k">Posisi terbuka</div><div class="v" id="s-open">–</div></div>
+    <div class="card stat"><div class="k">PnL tertutup</div><div class="v" id="s-pnl">–</div></div>
+    <div class="card stat"><div class="k">Win rate</div><div class="v" id="s-win">–</div></div>
+  </div>
+
+  <h2>Posisi terbuka</h2>
+  <div id="positions" class="stack"></div>
+
+  <h2>Kandidat pool terakhir</h2>
+  <div id="cands" class="stack"></div>
+
+  <h2>Riwayat close</h2>
+  <div id="closed" class="card"></div>
+
+  <h2>Log aktivitas</h2>
+  <div id="events" class="card"></div>
+
+  <h2>Aturan aktif</h2>
+  <div id="cfg" class="card cfg"></div>
+  <p class="muted" id="foot" style="margin-top:14px"></p>
+</main>
+
+<script>
+const token = new URLSearchParams(location.search).get("token") || "";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = (v, d = 2) => (Number.isFinite(+v) ? (+v).toFixed(d) : "–");
+const signed = (v, d = 2) => (v > 0 ? "+" : "") + num(v, d);
+const cls = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
+const usd = (v) => "$" + Math.round(+v || 0).toLocaleString("en-US");
+function ago(ms) {
+  if (!ms) return "belum pernah";
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 60) return s + " dtk lalu";
+  if (s < 3600) return Math.round(s / 60) + " mnt lalu";
+  if (s < 86400) return Math.round(s / 3600) + " jam lalu";
+  return Math.round(s / 86400) + " hari lalu";
+}
+function clock(ms) { return new Date(ms).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }); }
+
+function render(d) {
+  const m = $("mode");
+  m.textContent = d.mode === "LIVE" ? "LIVE" : "DRY RUN";
+  m.className = "badge " + (d.mode === "LIVE" ? "b-live" : "b-dry");
+
+  const closed = d.closed || [];
+  const pnlSol = closed.reduce((a, c) => a + (c.entrySol * c.pnlPct) / 100, 0);
+  const wins = closed.filter((c) => c.pnlPct > 0).length;
+  $("s-bal").textContent = d.balance == null ? "–" : num(d.balance, 3) + " SOL";
+  $("s-open").textContent = (d.positions || []).length + " / " + d.cfg.maxPositions;
+  $("s-pnl").innerHTML = closed.length ? `<span class="${cls(pnlSol)}">${signed(pnlSol, 4)} SOL</span>` : "–";
+  $("s-win").textContent = closed.length ? Math.round((wins / closed.length) * 100) + "%" : "–";
+
+  const sl = d.cfg.manage.stopLossPct, tp = d.cfg.manage.takeProfitPct;
+  $("positions").innerHTML = (d.positions || []).length
+    ? d.positions.map((p) => {
+        const pct = Math.max(0, Math.min(100, ((p.pnlPct - sl) / (tp - sl)) * 100));
+        const pnlSolP = p.valueSol - p.entrySol;
+        return `<div class="card">
+          <div class="between"><span class="name">${esc(p.name)}</span>
+            <span class="badge ${p.inRange ? "b-in" : "b-oor"}">${p.inRange ? "IN RANGE" : "OOR " + Math.round(p.oorMin) + "m"}</span></div>
+          <div class="between" style="margin-top:6px">
+            <span class="big ${cls(p.pnlPct)}">${signed(p.pnlPct)}%</span>
+            <span class="muted">${num(p.valueSol, 4)} SOL <span class="${cls(pnlSolP)}">(${signed(pnlSolP, 4)})</span></span></div>
+          <div class="track"><div class="mark" style="left:${pct}%"></div></div>
+          <div class="scale"><span>SL ${sl}%</span><span>TP +${tp}%</span></div>
+          <div class="muted" style="margin-top:6px">Modal ${num(p.entrySol, 3)} SOL · dibuka ${ago(p.openedAt)}</div>
+        </div>`;
+      }).join("")
+    : `<div class="card empty">Belum ada posisi terbuka.</div>`;
+
+  $("cands").innerHTML = (d.candidates || []).length
+    ? d.candidates.map((c) => `<div class="card">
+        <div class="between"><span class="name">${esc(c.name)}</span><span class="pos"><b>${num(c.feeTvlPct, 1)}%</b> <span class="muted">fee/TVL</span></span></div>
+        <div class="muted">TVL ${usd(c.tvl)} · Vol 24j ${usd(c.vol)} · bin step ${esc(c.binStep)}</div>
+      </div>`).join("")
+    : `<div class="card empty">Belum ada kandidat yang lolos filter.</div>`;
+
+  $("closed").innerHTML = closed.length
+    ? closed.slice(0, 15).map((c) => `<div class="log"><time>${new Date(c.closedAt).toLocaleDateString("id-ID", {day:"2-digit",month:"short"})}</time>
+        <b>${esc(c.name)}</b> <span class="${cls(c.pnlPct)}">${signed(c.pnlPct)}%</span> · ${esc(c.reason)}</div>`).join("")
+    : `<div class="empty">Belum ada posisi yang ditutup.</div>`;
+
+  $("events").innerHTML = (d.events || []).length
+    ? d.events.slice(0, 25).map((e) => `<div class="log"><time>${clock(e.t)}</time>${esc(e.text)}</div>`).join("")
+    : `<div class="empty">Belum ada aktivitas.</div>`;
+
+  const c = d.cfg, s = c.screen, mg = c.manage;
+  const rows = [
+    ["Deploy / posisi", c.deploySol + " SOL"], ["Maks posisi", c.maxPositions],
+    ["Bins di bawah", c.binsBelow], ["Cooldown pool", c.cooldownHours + " jam"],
+    ["TVL", usd(s.minTvl) + "–" + usd(s.maxTvl)], ["Vol 24j min", usd(s.minVolume24h)],
+    ["Fee/TVL min", s.minFeeTvl24hPct + "%"], ["Bin step", s.minBinStep + "–" + s.maxBinStep],
+    ["Stop loss", mg.stopLossPct + "%"], ["Take profit", "+" + mg.takeProfitPct + "%"],
+    ["OOR maks", mg.oorMinutes + " mnt"], ["Siklus", "kelola " + mg.intervalMin + "m · cari " + s.intervalMin + "m"],
+  ];
+  $("cfg").innerHTML = rows.map((r) => `<span>${esc(r[0])}</span><span>${esc(r[1])}</span>`).join("");
+  $("foot").textContent = `Terakhir kelola: ${ago(d.lastManage)} · terakhir cari: ${ago(d.lastScreen)} · bot hidup sejak ${ago(d.startedAt)}`;
+}
+
+async function load() {
+  const b = $("banner"), dot = $("dot");
+  try {
+    const r = await fetch("/api/status?token=" + encodeURIComponent(token), { cache: "no-store" });
+    if (r.status === 401) throw new Error("Token salah. Buka dengan ?token=ISI_DASHBOARD_TOKEN");
+    if (!r.ok) throw new Error("Server menjawab " + r.status);
+    render(await r.json());
+    b.style.display = "none"; dot.className = "dot ok";
+    $("upd").textContent = "update " + clock(Date.now());
+  } catch (e) {
+    dot.className = "dot err";
+    b.textContent = e.message === "Failed to fetch" ? "Tidak bisa terhubung ke bot. Pastikan bot masih jalan." : e.message;
+    b.style.display = "block";
+  }
+}
+$("ref").onclick = load;
+load();
+setInterval(load, 15000);
+</script>
+</body>
+</html>
