@@ -1,7 +1,7 @@
 {
   "deploySol": 0.3,
   "maxPositions": 3,
-  "gasReserveSol": 0.05,
+  "gasReserveSol": 0.1,
   "binsBelow": 50,
   "cooldownHours": 12,
   "blacklistMints": [],
