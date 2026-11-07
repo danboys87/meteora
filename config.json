@@ -1,6 +1,6 @@
 {
-  "deploySol": 0.1,
-  "maxPositions": 1,
+  "deploySol": 0.3,
+  "maxPositions": 3,
   "gasReserveSol": 0.05,
   "binsBelow": 50,
   "cooldownHours": 12,
@@ -18,7 +18,7 @@
     "maxMcap": 10000000
   },
   "manage": {
-    "intervalMin": 5,
+    "intervalMin": 2,
     "stopLossPct": -15,
     "takeProfitPct": 5,
     "oorMinutes": 30
