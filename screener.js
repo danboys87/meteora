@@ -1,40 +1,46 @@
-// Ambil pool dari API Meteora lalu saring dengan aturan sederhana.
-// CATATAN: cek dulu dengan `npm run screen` (read-only) bahwa field di bawah
-// sesuai dengan respons API saat ini. Kalau kosong, sesuaikan nama field-nya.
+// Ambil pool dari Meteora DLMM Data API lalu saring dengan aturan sederhana.
+// Dokumentasi: https://docs.meteora.ag/api-reference/dlmm/pools/pools
 export const SOL = "So11111111111111111111111111111111111111112";
+const API = "https://dlmm.datapi.meteora.ag/pools";
 
 export async function fetchCandidates(cfg) {
   const s = cfg.screen;
-  const url =
-    "https://dlmm-api.meteora.ag/pair/all_by_groups" +
-    `?sort_key=volume&order_by=desc&limit=100&hide_low_tvl=${s.minTvl}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Meteora API ${res.status}`);
-  const data = await res.json();
-  const pairs = (data.groups ?? []).flatMap((g) => g.pairs ?? []);
 
-  return pairs
-    .map((p) => {
-      const tvl = Number(p.liquidity);
-      const vol = Number(p.trade_volume_24h);
-      const fees = Number(p.fees_24h);
-      return {
-        pool: p.address,
-        name: p.name,
-        baseMint: p.mint_x,
-        quoteMint: p.mint_y,
-        binStep: Number(p.bin_step),
-        tvl, vol,
-        feeTvlPct: tvl > 0 ? (fees / tvl) * 100 : 0,
-      };
-    })
+  // Filter dasar dikerjakan di sisi server supaya data yang diunduh kecil.
+  const filter = [
+    "is_blacklisted=false",
+    `tvl>=${s.minTvl}`,
+    `tvl<=${s.maxTvl}`,
+    `volume_24h>=${s.minVolume24h}`,
+    `fee_tvl_ratio_24h>=${s.minFeeTvl24hPct}`,
+  ].join(" && ");
+
+  const url = `${API}?page=1&page_size=100&sort_by=${encodeURIComponent("fee_tvl_ratio_24h:desc")}` +
+              `&filter_by=${encodeURIComponent(filter)}`;
+  const res = await fetch(url, { headers: { accept: "application/json" } });
+  if (!res.ok) throw new Error(`Meteora API ${res.status}: ${(await res.text()).slice(0, 150)}`);
+  const body = await res.json();
+
+  return (body.data ?? [])
+    .map((p) => ({
+      pool: p.address,
+      name: p.name,
+      baseMint: p.token_x?.address,
+      quoteMint: p.token_y?.address,
+      binStep: Number(p.pool_config?.bin_step),
+      baseFeePct: Number(p.pool_config?.base_fee_pct),
+      tvl: Number(p.tvl),
+      vol: Number(p.volume?.["24h"]),
+      feeTvlPct: Number(p.fee_tvl_ratio?.["24h"]),
+      holders: Number(p.token_x?.holders),
+      mcap: Number(p.token_x?.market_cap),
+    }))
     .filter((c) =>
-      c.quoteMint === SOL &&                       // SOL harus token Y (deposit satu sisi SOL)
-      !cfg.blacklistMints.includes(c.baseMint) &&
-      c.tvl >= s.minTvl && c.tvl <= s.maxTvl &&
-      c.vol >= s.minVolume24h &&
-      c.feeTvlPct >= s.minFeeTvl24hPct &&
-      c.binStep >= s.minBinStep && c.binStep <= s.maxBinStep
-    )
-    .sort((a, b) => b.feeTvlPct - a.feeTvlPct);
+      c.quoteMint === SOL &&                        // SOL harus token Y (deposit satu sisi SOL)
+      !(cfg.blacklistMints ?? []).includes(c.baseMint) &&
+      c.binStep >= s.minBinStep && c.binStep <= s.maxBinStep &&
+      (!s.minHolders || c.holders >= s.minHolders) &&
+      (!s.minMcap || c.mcap >= s.minMcap) &&
+      (!s.maxMcap || c.mcap <= s.maxMcap)
+    );
 }

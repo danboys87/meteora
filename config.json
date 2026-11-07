@@ -12,7 +12,10 @@
     "minVolume24h": 50000,
     "minFeeTvl24hPct": 5,
     "minBinStep": 80,
-    "maxBinStep": 125
+    "maxBinStep": 125,
+    "minHolders": 500,
+    "minMcap": 150000,
+    "maxMcap": 10000000
   },
   "manage": {
     "intervalMin": 5,
