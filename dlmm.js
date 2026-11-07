@@ -9,6 +9,7 @@ const sdk = require("@meteora-ag/dlmm");
 const DLMM = sdk.default ?? sdk;
 const { StrategyType } = sdk;
 
+if (!process.env.RPC_URL) throw new Error("RPC_URL kosong di .env");
 export const conn = new Connection(process.env.RPC_URL, "confirmed");
 
 function loadWallet() {

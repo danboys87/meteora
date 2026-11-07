@@ -41,6 +41,7 @@ async function notify(text) {
 let _chain;
 const chain = async () => (_chain ??= await import("./dlmm.js"));
 async function refreshBalance() {
+  if (!process.env.WALLET_PRIVATE_KEY || !process.env.RPC_URL) return; // DRY RUN tanpa wallet
   try { status.balance = await (await chain()).solBalance(); } catch (e) { log("saldo error:", e.message); }
 }
 
@@ -52,9 +53,8 @@ async function screenCycle() {
   const open = Object.keys(s.open).length;
   if (open >= cfg.maxPositions) return log(`screen: posisi penuh (${open}/${cfg.maxPositions})`);
 
-  const c = await chain();
   if (!DRY) {
-    const bal = await c.solBalance();
+    const bal = await (await chain()).solBalance();
     if (bal < cfg.deploySol + cfg.gasReserveSol)
       return log(`screen: saldo kurang (${bal.toFixed(3)} SOL)`);
   }
@@ -73,6 +73,8 @@ async function screenCycle() {
   const pick = cands[0];
   const msg = `${pick.name} | fee/TVL ${pick.feeTvlPct.toFixed(1)}% | TVL $${Math.round(pick.tvl)} | vol $${Math.round(pick.vol)}`;
   if (DRY) return notify(`[DRY] akan deploy ${cfg.deploySol} SOL ke ${msg}`);
+
+  const c = await chain();
 
   const r = await c.deploy(pick.pool, cfg.deploySol, cfg.binsBelow);
   s.open[r.position] = {
@@ -149,6 +151,11 @@ if (cmd === "screen") {
   console.log(JSON.stringify(load().open, null, 2));
 } else {
   log(`Meridian Lite start | ${DRY ? "DRY RUN" : "LIVE"}`);
+  if (!DRY && (!process.env.WALLET_PRIVATE_KEY || !process.env.RPC_URL)) {
+    log("MODE LIVE butuh WALLET_PRIVATE_KEY dan RPC_URL di .env. Berhenti.");
+    process.exit(1);
+  }
+  if (DRY && !process.env.WALLET_PRIVATE_KEY) log("DRY RUN tanpa wallet: hanya screening, saldo tidak ditampilkan.");
   startServer(() => ({ ...status, closed: load().closed ?? [] }), log);
   const screen = safe("screen", screenCycle);
   const manage = safe("manage", manageCycle);
