@@ -9,13 +9,13 @@
   :root {
     --bg:#f4f5f7; --card:#ffffff; --text:#14181f; --muted:#6b7380; --line:#e4e7ec;
     --green:#0f9d58; --red:#d93025; --amber:#b26a00; --accent:#4f46e5;
-    --green-bg:#e6f6ee; --red-bg:#fdeceb; --amber-bg:#fff3e0;
+    --green-bg:#e6f6ee; --red-bg:#fdeceb; --amber-bg:#fff3e0; --accent-bg:#ecebff;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg:#0e1116; --card:#171b22; --text:#e8ebf0; --muted:#8b94a3; --line:#262c36;
       --green:#3ddc84; --red:#ff6b61; --amber:#ffb74d; --accent:#8b85ff;
-      --green-bg:#12301f; --red-bg:#3a1a18; --amber-bg:#3a2a10;
+      --green-bg:#12301f; --red-bg:#3a1a18; --amber-bg:#3a2a10; --accent-bg:#24223f;
     }
   }
   * { box-sizing:border-box; }
@@ -26,11 +26,11 @@
     padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
   }
   main { max-width:760px; margin:0 auto; }
-  header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
   h1 { font-size:19px; margin:0; letter-spacing:-.2px; }
   h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:22px 2px 8px; font-weight:600; }
   .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-  .badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:99px; }
+  .badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:99px; white-space:nowrap; }
   .b-dry { background:var(--amber-bg); color:var(--amber); }
   .b-live { background:var(--green-bg); color:var(--green); }
   .b-in { background:var(--green-bg); color:var(--green); }
@@ -39,7 +39,7 @@
   .dot.ok { background:var(--green); } .dot.err { background:var(--red); }
   .muted { color:var(--muted); font-size:13px; }
   .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-  @media (min-width:600px) { .grid { grid-template-columns:repeat(4,1fr); } }
+  @media (min-width:600px) { .grid.c4 { grid-template-columns:repeat(4,1fr); } .grid.c3 { grid-template-columns:repeat(3,1fr); } }
   .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:13px 14px; }
   .stat .k { font-size:12px; color:var(--muted); }
   .stat .v { font-size:21px; font-weight:650; margin-top:2px; font-variant-numeric:tabular-nums; }
@@ -54,46 +54,103 @@
           border:2px solid var(--card); transform:translateX(-50%); transition:left .4s; }
   .scale { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
   .empty { text-align:center; color:var(--muted); padding:18px 10px; }
-  .log { font-size:13px; padding:8px 0; border-top:1px solid var(--line); white-space:pre-wrap; word-break:break-word; }
+  .log { font-size:13px; padding:9px 0; border-top:1px solid var(--line); white-space:pre-wrap; word-break:break-word; }
   .log:first-child { border-top:0; }
   .log time { color:var(--muted); margin-right:6px; font-variant-numeric:tabular-nums; }
-  .cfg { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; font-size:13px; }
-  .cfg span:nth-child(odd) { color:var(--muted); }
-  .cfg span:nth-child(even) { text-align:right; font-variant-numeric:tabular-nums; }
+  .trade { font-size:14px; padding:10px 0; border-top:1px solid var(--line); }
+  .trade:first-child { border-top:0; }
   #banner { display:none; background:var(--red-bg); color:var(--red); padding:10px 12px; border-radius:10px; margin-bottom:12px; font-size:14px; }
   button { font:inherit; background:var(--card); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:6px 12px; cursor:pointer; }
+
+  /* tab */
+  .tabs { display:flex; gap:4px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px; margin-bottom:14px; }
+  .tabs button { flex:1; border:0; background:transparent; color:var(--muted); font-weight:600; font-size:14px; padding:8px 6px; border-radius:9px; }
+  .tabs button[aria-selected="true"] { background:var(--accent-bg); color:var(--accent); }
+  .tabs .n { font-weight:500; opacity:.8; }
+
+  /* grafik */
+  .chart { width:100%; height:110px; display:block; }
+  .chart .zero { stroke:var(--line); stroke-dasharray:4 4; stroke-width:1; vector-effect:non-scaling-stroke; }
+  .chart .ln { fill:none; stroke:var(--accent); stroke-width:2; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+
+  /* form pengaturan */
+  .fgroup { margin-bottom:6px; }
+  .field { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0; border-top:1px solid var(--line); }
+  .field:first-of-type { border-top:0; }
+  .field label { font-size:14px; flex:1; min-width:0; }
+  .field .hint { display:block; font-size:12px; color:var(--muted); }
+  .field input { width:130px; font:inherit; text-align:right; font-variant-numeric:tabular-nums; color:var(--text);
+                 background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:7px 10px; }
+  .field input:focus { outline:2px solid var(--accent); outline-offset:0; }
+  .actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px; }
+  .primary { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; padding:9px 18px; }
+  .primary:disabled { opacity:.6; cursor:default; }
+  #fmsg { font-size:13px; }
+  #fmsg.ok { color:var(--green); } #fmsg.err { color:var(--red); }
 </style>
 </head>
 <body>
 <main>
   <header>
     <div class="row"><h1>Meridian Lite</h1><span id="mode" class="badge"></span></div>
-    <div class="row"><span id="dot" class="dot"></span><span id="upd" class="muted">memuat…</span><button id="ref" type="button">↻</button></div>
+    <div class="row"><span id="dot" class="dot"></span><span id="upd" class="muted">memuat…</span><button id="ref" type="button" aria-label="Muat ulang">↻</button></div>
   </header>
   <div id="banner"></div>
 
-  <div class="grid">
-    <div class="card stat"><div class="k">Saldo wallet</div><div class="v" id="s-bal">–</div></div>
-    <div class="card stat"><div class="k">Posisi terbuka</div><div class="v" id="s-open">–</div></div>
-    <div class="card stat"><div class="k">PnL tertutup</div><div class="v" id="s-pnl">–</div></div>
-    <div class="card stat"><div class="k">Win rate</div><div class="v" id="s-win">–</div></div>
-  </div>
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" data-tab="open">Open <span class="n" id="n-open"></span></button>
+    <button type="button" role="tab" data-tab="history">History / PnL</button>
+    <button type="button" role="tab" data-tab="settings">Settings</button>
+  </nav>
 
-  <h2>Posisi terbuka</h2>
-  <div id="positions" class="stack"></div>
+  <!-- TAB: OPEN -->
+  <section id="tab-open" role="tabpanel">
+    <div class="grid c4">
+      <div class="card stat"><div class="k">Saldo wallet</div><div class="v" id="o-bal">–</div></div>
+      <div class="card stat"><div class="k">Posisi terbuka</div><div class="v" id="o-open">–</div></div>
+      <div class="card stat"><div class="k">Modal terpakai</div><div class="v" id="o-cap">–</div></div>
+      <div class="card stat"><div class="k">PnL mengambang</div><div class="v" id="o-float">–</div></div>
+    </div>
 
-  <h2>Kandidat pool terakhir</h2>
-  <div id="cands" class="stack"></div>
+    <h2>Posisi terbuka</h2>
+    <div id="positions" class="stack"></div>
 
-  <h2>Riwayat close</h2>
-  <div id="closed" class="card"></div>
+    <h2>Kandidat pool terakhir</h2>
+    <div id="cands" class="stack"></div>
 
-  <h2>Log aktivitas</h2>
-  <div id="events" class="card"></div>
+    <h2>Log aktivitas</h2>
+    <div id="events" class="card"></div>
+  </section>
 
-  <h2>Aturan aktif</h2>
-  <div id="cfg" class="card cfg"></div>
-  <p class="muted" id="foot" style="margin-top:14px"></p>
+  <!-- TAB: HISTORY -->
+  <section id="tab-history" role="tabpanel" hidden>
+    <div class="grid c3">
+      <div class="card stat"><div class="k">Total PnL</div><div class="v" id="h-pnl">–</div></div>
+      <div class="card stat"><div class="k">Win rate</div><div class="v" id="h-win">–</div></div>
+      <div class="card stat"><div class="k">Jumlah trade</div><div class="v" id="h-n">–</div></div>
+      <div class="card stat"><div class="k">Rata-rata / trade</div><div class="v" id="h-avg">–</div></div>
+      <div class="card stat"><div class="k">Terbaik</div><div class="v" id="h-best">–</div></div>
+      <div class="card stat"><div class="k">Terburuk</div><div class="v" id="h-worst">–</div></div>
+    </div>
+
+    <h2>PnL kumulatif</h2>
+    <div class="card" id="h-chart"></div>
+
+    <h2>Riwayat trade</h2>
+    <div id="closed" class="card"></div>
+  </section>
+
+  <!-- TAB: SETTINGS -->
+  <section id="tab-settings" role="tabpanel" hidden>
+    <p class="muted" style="margin:0 2px 4px">Disimpan ke <code>config.json</code>. Berlaku di siklus berikutnya, tanpa restart. Interval baru berlaku setelah jeda yang sedang berjalan selesai.</p>
+    <div id="form"></div>
+    <div class="actions">
+      <button id="save" type="button" class="primary">Simpan</button>
+      <button id="reset" type="button">Kembalikan</button>
+      <span id="fmsg" role="status"></span>
+    </div>
+    <p class="muted" id="foot" style="margin-top:18px"></p>
+  </section>
 </main>
 
 <script>
@@ -112,35 +169,160 @@ function ago(ms) {
   if (s < 86400) return Math.round(s / 3600) + " jam lalu";
   return Math.round(s / 86400) + " hari lalu";
 }
-function clock(ms) { return new Date(ms).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }); }
+function dur(ms) {
+  if (!ms || ms < 0) return "–";
+  const m = Math.round(ms / 60000);
+  if (m < 60) return m + "m";
+  if (m < 1440) return Math.floor(m / 60) + "j " + (m % 60) + "m";
+  return Math.floor(m / 1440) + "h " + Math.floor((m % 1440) / 60) + "j";
+}
+const clock = (ms) => new Date(ms).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+const dateShort = (ms) => new Date(ms).toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+
+/* ── tab ── */
+const TABS = ["open", "history", "settings"];
+function showTab(t) {
+  if (!TABS.includes(t)) t = "open";
+  for (const x of TABS) {
+    $("tab-" + x).hidden = x !== t;
+    document.querySelector(`[data-tab="${x}"]`).setAttribute("aria-selected", String(x === t));
+  }
+  if (location.hash !== "#" + t) history.replaceState(null, "", "#" + t);
+}
+document.querySelectorAll(".tabs button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
+
+/* ── definisi form pengaturan ── */
+const GROUPS = [
+  { title: "Posisi", fields: [
+    ["deploySol", "Deploy per posisi (SOL)", "0.01", ""],
+    ["maxPositions", "Maks posisi terbuka", "1", ""],
+    ["gasReserveSol", "Cadangan gas (SOL)", "0.01", "Saldo minimal di luar deploy"],
+    ["binsBelow", "Jumlah bin di bawah harga", "1", "Maks 69"],
+    ["cooldownHours", "Cooldown pool (jam)", "1", "Jeda sebelum pool yang sama dipilih lagi"],
+  ]},
+  { title: "Screening", fields: [
+    ["screen.intervalMin", "Interval cari (menit)", "1", ""],
+    ["screen.minTvl", "TVL min (USD)", "1000", ""],
+    ["screen.maxTvl", "TVL maks (USD)", "1000", ""],
+    ["screen.minVolume24h", "Volume 24j min (USD)", "1000", ""],
+    ["screen.minFeeTvl24hPct", "Fee/TVL 24j min (%)", "0.5", ""],
+    ["screen.minBinStep", "Bin step min", "1", ""],
+    ["screen.maxBinStep", "Bin step maks", "1", ""],
+    ["screen.minHolders", "Holder min", "10", "0 = nonaktif"],
+    ["screen.minMcap", "Market cap min (USD)", "10000", "0 = nonaktif"],
+    ["screen.maxMcap", "Market cap maks (USD)", "10000", "0 = nonaktif"],
+  ]},
+  { title: "Manajemen posisi", fields: [
+    ["manage.intervalMin", "Interval kelola (menit)", "1", ""],
+    ["manage.stopLossPct", "Stop loss (%)", "1", "Angka negatif, mis. -15"],
+    ["manage.takeProfitPct", "Take profit (%)", "0.5", ""],
+    ["manage.oorMinutes", "Maks waktu OOR (menit)", "5", "Tutup jika di luar range selama ini"],
+  ]},
+];
+const getPath = (o, p) => p.split(".").reduce((a, k) => a?.[k], o);
+
+let dirty = false;      // true saat ada isian yang belum disimpan, supaya polling tidak menimpanya
+let lastCfg = null;
+
+function buildForm() {
+  $("form").innerHTML = GROUPS.map((g) => `
+    <h2>${esc(g.title)}</h2>
+    <div class="card fgroup">${g.fields.map(([path, label, step, hint]) => `
+      <div class="field">
+        <label for="f-${esc(path)}">${esc(label)}${hint ? `<span class="hint">${esc(hint)}</span>` : ""}</label>
+        <input id="f-${esc(path)}" data-path="${esc(path)}" type="number" step="${step}" inputmode="decimal">
+      </div>`).join("")}
+    </div>`).join("");
+  $("form").addEventListener("input", () => { dirty = true; setMsg(""); });
+}
+function fillForm(cfg) {
+  document.querySelectorAll("#form input").forEach((i) => {
+    const v = getPath(cfg, i.dataset.path);
+    i.value = v ?? "";
+  });
+  dirty = false;
+}
+function setMsg(text, kind = "") { const m = $("fmsg"); m.textContent = text; m.className = kind; }
+
+async function saveCfg() {
+  const patch = {};
+  for (const i of document.querySelectorAll("#form input")) {
+    if (i.value.trim() === "") return setMsg("Ada kolom yang kosong: " + i.dataset.path, "err");
+    patch[i.dataset.path] = Number(i.value);
+  }
+  const btn = $("save");
+  btn.disabled = true; setMsg("Menyimpan…");
+  try {
+    const r = await fetch("/api/config?token=" + encodeURIComponent(token), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok || !body.ok) throw new Error(body.error || "Server menjawab " + r.status);
+    lastCfg = body.cfg;
+    fillForm(body.cfg);
+    setMsg("Tersimpan ✓", "ok");
+    load();
+  } catch (e) {
+    setMsg(e.message === "Failed to fetch" ? "Tidak bisa terhubung ke bot." : e.message, "err");
+  } finally {
+    btn.disabled = false;
+  }
+}
+$("save").onclick = saveCfg;
+$("reset").onclick = () => { if (lastCfg) { fillForm(lastCfg); setMsg("Dikembalikan ke nilai tersimpan"); } };
+
+/* ── render ── */
+function chartSvg(trades) { // trades urut dari lama ke baru
+  let acc = 0; const pts = [0];
+  for (const t of trades) { acc += (t.entrySol * t.pnlPct) / 100; pts.push(acc); }
+  const min = Math.min(...pts, 0), max = Math.max(...pts, 0), span = max - min || 1;
+  const x = (i) => (i / (pts.length - 1)) * 300;
+  const y = (v) => 96 - ((v - min) / span) * 88;
+  const path = pts.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
+  const z = y(0).toFixed(1);
+  return `<svg class="chart" viewBox="0 0 300 100" preserveAspectRatio="none" role="img" aria-label="PnL kumulatif">
+    <line class="zero" x1="0" x2="300" y1="${z}" y2="${z}"/><path class="ln" d="${path}"/></svg>
+    <div class="between muted" style="margin-top:6px"><span>${trades.length} trade</span>
+      <span>Kumulatif: <b class="${cls(acc)}">${signed(acc, 4)} SOL</b></span></div>`;
+}
 
 function render(d) {
   const m = $("mode");
   m.textContent = d.mode === "LIVE" ? "LIVE" : "DRY RUN";
   m.className = "badge " + (d.mode === "LIVE" ? "b-live" : "b-dry");
 
+  const positions = d.positions || [];
   const closed = d.closed || [];
-  const pnlSol = closed.reduce((a, c) => a + (c.entrySol * c.pnlPct) / 100, 0);
-  const wins = closed.filter((c) => c.pnlPct > 0).length;
-  $("s-bal").textContent = d.balance == null ? "–" : num(d.balance, 3) + " SOL";
-  $("s-open").textContent = (d.positions || []).length + " / " + d.cfg.maxPositions;
-  $("s-pnl").innerHTML = closed.length ? `<span class="${cls(pnlSol)}">${signed(pnlSol, 4)} SOL</span>` : "–";
-  $("s-win").textContent = closed.length ? Math.round((wins / closed.length) * 100) + "%" : "–";
+  const cfg = d.cfg;
+  lastCfg = cfg;
+  if (!dirty) fillForm(cfg);
 
-  const sl = d.cfg.manage.stopLossPct, tp = d.cfg.manage.takeProfitPct;
-  $("positions").innerHTML = (d.positions || []).length
-    ? d.positions.map((p) => {
+  /* — tab Open — */
+  const cap = positions.reduce((a, p) => a + p.entrySol, 0);
+  const floatSol = positions.reduce((a, p) => a + (p.valueSol - p.entrySol), 0);
+  $("n-open").textContent = positions.length ? `(${positions.length})` : "";
+  $("o-bal").textContent = d.balance == null ? "–" : num(d.balance, 3) + " SOL";
+  $("o-open").textContent = positions.length + " / " + cfg.maxPositions;
+  $("o-cap").textContent = num(cap, 3) + " SOL";
+  $("o-float").innerHTML = positions.length ? `<span class="${cls(floatSol)}">${signed(floatSol, 4)}</span> <span class="muted">SOL</span>` : "–";
+
+  const sl = cfg.manage.stopLossPct, tp = cfg.manage.takeProfitPct;
+  $("positions").innerHTML = positions.length
+    ? positions.map((p) => {
         const pct = Math.max(0, Math.min(100, ((p.pnlPct - sl) / (tp - sl)) * 100));
         const pnlSolP = p.valueSol - p.entrySol;
         return `<div class="card">
-          <div class="between"><span class="name">${esc(p.name)}</span>
+          <div class="between"><span class="name">${esc(p.name)} ${p.paper ? '<span class="badge b-dry">PAPER</span>' : ""}</span>
             <span class="badge ${p.inRange ? "b-in" : "b-oor"}">${p.inRange ? "IN RANGE" : "OOR " + Math.round(p.oorMin) + "m"}</span></div>
           <div class="between" style="margin-top:6px">
             <span class="big ${cls(p.pnlPct)}">${signed(p.pnlPct)}%</span>
             <span class="muted">${num(p.valueSol, 4)} SOL <span class="${cls(pnlSolP)}">(${signed(pnlSolP, 4)})</span></span></div>
           <div class="track"><div class="mark" style="left:${pct}%"></div></div>
           <div class="scale"><span>SL ${sl}%</span><span>TP +${tp}%</span></div>
-          <div class="muted" style="margin-top:6px">Modal ${num(p.entrySol, 3)} SOL · dibuka ${ago(p.openedAt)}</div>
+          <div class="muted" style="margin-top:6px">Modal ${num(p.entrySol, 3)} SOL · dibuka ${ago(p.openedAt)} (${dur(Date.now() - p.openedAt)})</div>
         </div>`;
       }).join("")
     : `<div class="card empty">Belum ada posisi terbuka.</div>`;
@@ -152,25 +334,40 @@ function render(d) {
       </div>`).join("")
     : `<div class="card empty">Belum ada kandidat yang lolos filter.</div>`;
 
-  $("closed").innerHTML = closed.length
-    ? closed.slice(0, 15).map((c) => `<div class="log"><time>${new Date(c.closedAt).toLocaleDateString("id-ID", {day:"2-digit",month:"short"})}</time>
-        <b>${esc(c.name)}</b> <span class="${cls(c.pnlPct)}">${signed(c.pnlPct)}%</span> · ${esc(c.reason)}</div>`).join("")
-    : `<div class="empty">Belum ada posisi yang ditutup.</div>`;
-
   $("events").innerHTML = (d.events || []).length
     ? d.events.slice(0, 25).map((e) => `<div class="log"><time>${clock(e.t)}</time>${esc(e.text)}</div>`).join("")
     : `<div class="empty">Belum ada aktivitas.</div>`;
 
-  const c = d.cfg, s = c.screen, mg = c.manage;
-  const rows = [
-    ["Deploy / posisi", c.deploySol + " SOL"], ["Maks posisi", c.maxPositions],
-    ["Bins di bawah", c.binsBelow], ["Cooldown pool", c.cooldownHours + " jam"],
-    ["TVL", usd(s.minTvl) + "–" + usd(s.maxTvl)], ["Vol 24j min", usd(s.minVolume24h)],
-    ["Fee/TVL min", s.minFeeTvl24hPct + "%"], ["Bin step", s.minBinStep + "–" + s.maxBinStep],
-    ["Stop loss", mg.stopLossPct + "%"], ["Take profit", "+" + mg.takeProfitPct + "%"],
-    ["OOR maks", mg.oorMinutes + " mnt"], ["Siklus", "kelola " + mg.intervalMin + "m · cari " + s.intervalMin + "m"],
-  ];
-  $("cfg").innerHTML = rows.map((r) => `<span>${esc(r[0])}</span><span>${esc(r[1])}</span>`).join("");
+  /* — tab History — */
+  const pnls = closed.map((c) => (c.entrySol * c.pnlPct) / 100);
+  const total = pnls.reduce((a, b) => a + b, 0);
+  const wins = closed.filter((c) => c.pnlPct > 0).length;
+  const avg = closed.length ? closed.reduce((a, c) => a + c.pnlPct, 0) / closed.length : 0;
+  const best = closed.length ? Math.max(...closed.map((c) => c.pnlPct)) : 0;
+  const worst = closed.length ? Math.min(...closed.map((c) => c.pnlPct)) : 0;
+
+  $("h-pnl").innerHTML = closed.length ? `<span class="${cls(total)}">${signed(total, 4)}</span> <span class="muted">SOL</span>` : "–";
+  $("h-win").textContent = closed.length ? Math.round((wins / closed.length) * 100) + "%" : "–";
+  $("h-n").textContent = closed.length || "–";
+  $("h-avg").innerHTML = closed.length ? `<span class="${cls(avg)}">${signed(avg)}%</span>` : "–";
+  $("h-best").innerHTML = closed.length ? `<span class="${cls(best)}">${signed(best)}%</span>` : "–";
+  $("h-worst").innerHTML = closed.length ? `<span class="${cls(worst)}">${signed(worst)}%</span>` : "–";
+
+  $("h-chart").innerHTML = closed.length >= 2
+    ? chartSvg(closed.slice().reverse())
+    : `<div class="empty">Grafik muncul setelah minimal 2 posisi ditutup.</div>`;
+
+  $("closed").innerHTML = closed.length
+    ? closed.map((c) => {
+        const sol = (c.entrySol * c.pnlPct) / 100;
+        return `<div class="trade">
+          <div class="between"><span><b>${esc(c.name)}</b> ${c.paper ? '<span class="badge b-dry">PAPER</span>' : ""}</span>
+            <span class="${cls(c.pnlPct)}"><b>${signed(c.pnlPct)}%</b> <span class="muted">(${signed(sol, 4)} SOL)</span></span></div>
+          <div class="muted">${dateShort(c.closedAt)} ${clock(c.closedAt)} · modal ${num(c.entrySol, 3)} SOL · durasi ${dur(c.openedAt ? c.closedAt - c.openedAt : 0)} · ${esc(c.reason)}</div>
+        </div>`;
+      }).join("")
+    : `<div class="empty">Belum ada posisi yang ditutup.</div>`;
+
   $("foot").textContent = `Terakhir kelola: ${ago(d.lastManage)} · terakhir cari: ${ago(d.lastScreen)} · bot hidup sejak ${ago(d.startedAt)}`;
 }
 
@@ -189,6 +386,9 @@ async function load() {
     b.style.display = "block";
   }
 }
+
+buildForm();
+showTab(location.hash.slice(1));
 $("ref").onclick = load;
 load();
 setInterval(load, 15000);
