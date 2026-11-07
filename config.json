@@ -1,0 +1,23 @@
+{
+  "deploySol": 0.1,
+  "maxPositions": 1,
+  "gasReserveSol": 0.05,
+  "binsBelow": 50,
+  "cooldownHours": 12,
+  "blacklistMints": [],
+  "screen": {
+    "intervalMin": 30,
+    "minTvl": 10000,
+    "maxTvl": 150000,
+    "minVolume24h": 50000,
+    "minFeeTvl24hPct": 5,
+    "minBinStep": 80,
+    "maxBinStep": 125
+  },
+  "manage": {
+    "intervalMin": 5,
+    "stopLossPct": -15,
+    "takeProfitPct": 5,
+    "oorMinutes": 30
+  }
+}
